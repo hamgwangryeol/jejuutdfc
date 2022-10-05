@@ -6,19 +6,97 @@ editor: visual
 
 ## 자료수집
 
-## Running Code
+기간 : 2019.07.01 \~ 2022.09.28
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+데이터 수집 출처 : 빅카인즈
 
 ```{r}
-1 + 1
+library(ggplot2)
+package_list <- c("tidyverse", "tidytext", "readxl", "kableExtra", 
+                  "multilinguer", "RcppMeCab", "KoNLP", "lubridate", 
+                  "tidylo", "stm", "reshape2", "dplyr", "ggplot2", 
+                  "stringr", "rvest", "wordcloud", "tm", "VennDiagram", "gt")
+ 
+#package_list_installed <- package_list %in% installed.packages()[,"Package"]
+ #new_pkg <- package_list[!package_list_installed]
+ #if(length(new_pkg)) install.packages(new_pkg)
+lapply(package_list, require, character.only = TRUE)
 ```
 
-You can add options to executable code like this
+```{r}
+install.packages("tidytext")
+```
 
 ```{r}
-#| echo: false
-2 * 2
+install.packages("tidyverse")
+```
+
+```{r}
+install.packages("dplyr")
+```
+
+```{r}
+library(tidytext)
+library(tidyverse)
+library(dplyr)
+```
+
+## 제주유나이티드 FC
+
+자료 준비
+
+```{r}
+jejuutd_data <- readxl::read_excel("jejuutdnew.xlsx") %>% 
+  select(제목, 본문)
+```
+
+총빈도 분석
+
+```{r}
+jeju_df <- jejuutd_data %>% 
+  distinct(제목, .keep_all = T) %>% 
+  mutate(ID = factor(row_number())) %>% 
+  mutate(label = "0") %>%
+  unite(제목, 본문, col = "text", sep = " ") %>% 
+  mutate(text = str_squish(text))
+
+jeju_df <- jeju_df %>%
+  mutate_all(as.character)
+
+jeju_tk <- jeju_df %>% 
+  mutate_all(as.character) %>% 
+  unnest_tokens(word, text) %>%
+  count(word, sort = TRUE)
+
+install.packages("kableExtra")
+```
+
+```{r}
+install.packages("RcppMeCab")
+library(RcppMeCab)
+```
+
+```{r}
+
+jeju_tk <- jeju_df %>% 
+  mutate(text = str_remove_all(text, "[^(\\w+|\\s)]")) %>%  
+  unnest_tokens(word, text, token = extractNoun, drop = F) %>%
+  # separate(word, c("word", "pos"), sep = "/") %>% 
+  # filter(pos == "nng") %>% 
+  count(word, sort = T)
+
+jeju_tk <- jeju_tk %>% 
+  filter(!word %in% c("SK", "K리그", "기자")) %>% 
+  filter(str_detect(word, "[:alpha:]+"))
+
+jeju_tk %>%
+  filter(str_length(word) > 1) %>%
+  slice_max(n, n = 15) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  ggplot(aes(word, n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "제주유나이티드 총빈도")
 ```
 
 The `echo: false` option disables the printing of code (only output is displayed).
