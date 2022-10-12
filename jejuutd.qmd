@@ -8,6 +8,8 @@ editor: visual
 
 기간 : 2019.07.01 \~ 2022.09.28.
 
+제주유나이티드가 강등된 시기(2019년 11월)부터 현재까지의 평판을 분석하고자 2019년 7월부터 현재까지의 기사를 수집함.
+
 데이터 수집 출처 : 빅카인즈
 
 ```{r}
@@ -55,4 +57,30 @@ jejuutd_tk %>%
   geom_col() +
   coord_flip() +
   labs(title = "제주UTD 총빈도")
+```
+
+```{r}
+jbfc_df <- readxl::read_excel("jbhd.xlsx") %>% 
+  select(제목, 본문)
+jbfc_df2 <- jbfc_df %>% 
+  distinct(제목, .keep_all = T) %>% 
+  mutate(ID = factor(row_number())) %>% 
+  mutate(label = "0") %>%
+  unite(제목, 본문, col = "text", sep = " ") %>% 
+  mutate(text = str_squish(text))
+jbfc_tk <- jbfc_df2 %>% 
+  mutate(text = str_remove_all(text, "[^(\\w+|\\s)]")) %>%  
+  unnest_tokens(word, text, drop = F) %>%
+  count(word, sort = T)
+jbfc_tk <- jbfc_tk %>% 
+  filter(!word %in% c("전북현대", "현대", "전북", "축구", "리그", "기자", "K리그", "하나원큐","프로축구","fc")) %>% 
+  filter(str_detect(word, "[:alpha:]+")) %>%
+  filter(str_length(word) > 1) %>%
+  slice_max(n, n = 15) %>% 
+  mutate(word = reorder(word, n))
+jbfc_tk %>%
+  ggplot(aes(word, n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "전북현대 총빈도")
 ```
