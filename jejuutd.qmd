@@ -42,7 +42,7 @@ jejuutd_df2 <- jejuutd_df %>%
   mutate(text = str_squish(text))
 jejuutd_tk <- jejuutd_df2 %>% 
   mutate(text = str_remove_all(text, "[^(\\w+|\\s)]")) %>%  
-  unnest_tokens(word, text, token = extractNoun, drop = F) %>%
+  unnest_tokens(word, text, drop = F) %>%
   count(word, sort = T)
 jejuutd_tk <- jejuutd_tk %>% 
   filter(!word %in% c("SK", "제주", "축구", "리그", "기자", "K리그", "하나원큐","프로축구","fc")) %>% 
