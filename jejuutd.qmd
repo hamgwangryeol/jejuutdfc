@@ -84,3 +84,24 @@ jbfc_tk %>%
   coord_flip() +
   labs(title = "전북현대 총빈도")
 ```
+
+## 상대 빈도 분석
+
+```{r}
+weighted_log_odds_df1 <-
+  bind_rows(jejuutd_tk, jbfc_tk, .id = "party") %>% 
+  bind_log_odds(set = party,
+                feature = word, 
+                n = n) %>% 
+  arrange(-log_odds_weighted)
+```
+
+### 제주유나이티드 FC
+
+```{r}
+jejuutd_data3 <- jejuutd_data2 %>%
+  as_tibble()
+jejuutd_data4 <- jejuutd_data3 %>%
+  unnest_tokens(input = body,
+                output = jejuutd_word)
+```

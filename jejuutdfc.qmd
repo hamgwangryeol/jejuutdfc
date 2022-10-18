@@ -1,0 +1,160 @@
+---
+title: "언론 분석을 통한 제주유나이티드 FC와 전북현대모터스의 평판 비교 분석"
+format: html
+editor: visual
+---
+
+## 개요
+
+대한민국 프로축구 리그인 K리그1의 제주유나이티드와 전북현대 모터스의 평판을 비교
+
+제주유나이티드는 2006년 제주로 연고 이전 이후 2010년과 2017년 준우승을 기록하는 등 상위권 팀으로 자리매김하고 있으며, 전북현대는 2021시즌까지 K리그1 6연패라는 어마어마한 기록을 쓴 팀이다.
+
+하지만 제주유나이티드는 2019년 최악의 경기력을 보이며 K리그1 최하위로 강등된 아픈 역사를 가지고 있으며, 전북현대는 김상식 감독이 지휘봉을 잡은 후 최악의 경기력을 보이며 2021 시즌 울산현대에게 우승을 내줄 뻔하기도 하였으며, 2022시즌에는 울산에게 우승컵을 내줬다. 이 두팀의 평판을 분석하여 어떠한 차이를 보이고 있는지 살펴보고자 함
+
+## 자료 분석 방법
+
+자료 유형 : 뉴스 (스포츠 기사)
+
+자료 출처 : 빅카인즈
+
+자료기간 : 2019.07.01\~2022.09.28
+
+## 자료수집
+
+```{r}
+package_list <- c("tidyverse", "tidytext", "readxl", "kableExtra", 
+                  "multilinguer", "RcppMeCab", "KoNLP", "lubridate", 
+                  "tidylo", "stm", "reshape2", "dplyr", "ggplot2", 
+                  "stringr", "rvest", "wordcloud", "tm", "VennDiagram", "gt")
+ 
+#package_list_installed <- package_list %in% installed.packages()[,"Package"]
+ #new_pkg <- package_list[!package_list_installed]
+ #if(length(new_pkg)) install.packages(new_pkg)
+lapply(package_list, require, character.only = TRUE)
+```
+
+```{r}
+jeju_df <- readxl::read_excel("jejuutdnew.xlsx") %>% 
+  select(제목, 본문)
+jbhd_df <- readxl::read_excel("jbhd.xlsx") %>% 
+  select(제목, 본문)
+```
+
+## 총빈도 자료 분석
+
+### 제주유나이티드 FC
+
+```{r}
+jeju_df2 <- jeju_df %>% 
+  distinct(제목, .keep_all = T) %>% 
+  mutate(ID = factor(row_number())) %>% 
+  mutate(label = "0") %>%
+  unite(제목, 본문, col = "text", sep = " ") %>% 
+  mutate(text = str_squish(text))
+jeju_tk <- jeju_df2 %>% 
+  mutate(text = str_remove_all(text, "[^(\\w+|\\s)]")) %>%  
+  unnest_tokens(word, text, drop = F) %>%
+  count(word, sort = T)
+jeju_tk <- 
+jeju_tk %>% 
+  filter(!word %in% c("sk", "utd","제주", "K리그", "기자", "축구", "하나원큐", "프로축구","경기","승점", "라운드","fc","지난","제주유나이티드","오후","경기에서","제주는","이하","리그","유나이티드","시즌","있다","열린","밝혔다","이날", "부리그","제주월드컵경기장에서","으로","만에")) %>% 
+  filter(str_detect(word, "[:alpha:]+")) %>%
+  filter(str_length(word) > 1) %>%
+  slice_max(n, n = 15) %>% 
+  mutate(word = reorder(word, n))
+jeju_tk %>%
+  ggplot(aes(word, n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "제주유나이티드 총빈도")
+```
+
+### 전북현대 모터스
+
+```{r}
+jbhd_df2 <- jbhd_df %>% 
+  distinct(제목, .keep_all = T) %>% 
+  mutate(ID = factor(row_number())) %>% 
+  mutate(label = "0") %>%
+  unite(제목, 본문, col = "text", sep = " ") %>% 
+  mutate(text = str_squish(text))
+jbhd_tk <- jbhd_df2 %>% 
+  mutate(text = str_remove_all(text, "[^(\\w+|\\s)]")) %>%  
+  unnest_tokens(word, text, drop = F) %>%
+  count(word, sort = T)
+jbhd_tk <- 
+jbhd_tk %>% 
+  filter(!word %in% c("현대", "전북", "K리그", "기자", "축구", "하나원큐", "프로축구","경기","승점", "라운드","fc","지난","전북현대가","오후","경기에서","전북은","이하","리그","전주월드컵경기장에서","시즌","있다","열린","밝혔다","이날", "부리그","으로","전북현대", "경기를", "치른다","이번","있는","오는","상대로")) %>% 
+  filter(str_detect(word, "[:alpha:]+")) %>%
+  filter(str_length(word) > 1) %>%
+  slice_max(n, n = 15) %>% 
+  mutate(word = reorder(word, n))
+jbhd_tk %>%
+  ggplot(aes(word, n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "전북현대 총빈도")
+```
+
+### 분석
+
+제주유나이티드의 경우, 라이벌 팀으로 평가받는 수원삼성, 인천 유나이티드 등의 언급이 기사에 많았으며, 지난해 8월 코로나 집단 감염이 있었던 제주유나이티드는 '코로나'라는 단어도 두드러지게 나타난 것으로 보임
+
+전북현대의 경우도 비슷하게 라이벌팀으로 평가받는 팀들의 언급이 많았으며, 제주유나이티드와는 다르게 '우승', '선두'라는 단어가 두드러지게 보였음
+
+### 상대빈도
+
+```{r}
+jejufc_df <- readxl::read_excel("jejuutdnew.xlsx") %>% 
+  select(제목, 언론사, 본문, URL)
+jejufc_tk <- jejufc_df %>%
+  drop_na() %>% unnest_tokens(word, 제목) %>%
+  separate(word, c("word", "pos"), sep = "/") %>%
+  
+filter(pos == 'nng')
+
+jejufc_tk %>%
+count(언론사, word) %>%
+bind_log_odds(set = 언론사, feature = word, n = n) %>%
+group_by(언론사) %>%
+slice_max(abs(log_odds_weighted), n = 10) %>%
+ggplot(aes(x = log_odds_weighted, y = reorder(word, log_odds_weighted))) +
+geom_col(show.legend = F)
+```
+
+### 감정분석
+
+```{r}
+#| label: 감정분석_사전 데이터 프레임1
+#| echo: true
+#| warning: false
+# pkg_v <- c("tidyverse", "tidytext", "epubr", "RcppMeCab", "KoNLP" )
+# lapply(pkg_v, require, ch = T)
+# url_v <- "https://github.com/park1200656/KnuSentiLex/archive/refs/heads/master.zip"
+# dest_v <- "data/knusenti.zip"
+# download.file(url = url_v, destfile = dest_v, mode = "wb")
+# unzip("knusenti.zip", exdir=outPath)
+
+#| label: 감정분석_사전 데이터 프레임2
+#| echo: true
+#| warning: false
+senti_name_v <- list.files("data/knusenti/KnuSentiLex-master/.")[9]
+senti_dic_df <- read_tsv(str_c("data/knusenti/KnuSentiLex-master/", senti_name_v), col_names = F)
+senti_dic_df <- senti_dic_df %>% rename(word = X1, sScore = X2)
+knu_dic_df <- senti_dic_df %>% 
+  filter(!is.na(sScore))
+
+jejuutd_senti_df <- jejuutd_df %>% 
+  unnest_tokens(word, text) %>% 
+  inner_join(knu_dic_df) %>% 
+  count(word, sScore, sort = T) %>% 
+  filter(str_length(word) > 1) %>% 
+  filter(!word %in% c("대상")) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  slice_head(n = 20)
+musinsa_senti_df %>% 
+  ggplot() + geom_col(aes(n, word, fill = sScore), show.legend = F) +
+    labs(title = "제주유나이티드 감정빈도 분석")
+
+```
