@@ -114,6 +114,15 @@ jejufc_tk <- jejufc_df %>%
   
 filter(pos == 'nng')
 
+jbhdfc_df <- readxl::read_excel("jbhd.xlsx") %>% 
+  select(제목, 언론사, 본문, URL)
+jbhdfc_tk <- jbhdfc_df %>%
+  drop_na() %>% unnest_tokens(word, 제목) %>%
+  separate(word, c("word", "pos"), sep = "/") %>%
+  
+filter(pos == 'nng')
+library(tidylo)
+
 jejufc_tk %>%
 count(언론사, word) %>%
 bind_log_odds(set = 언론사, feature = word, n = n) %>%
@@ -125,6 +134,8 @@ geom_col(show.legend = F)
 
 ### 감정분석
 
+### 제주유나이티드
+
 ```{r}
 #| label: 감정분석_사전 데이터 프레임1
 #| echo: true
@@ -132,31 +143,45 @@ geom_col(show.legend = F)
 # pkg_v <- c("tidyverse", "tidytext", "epubr", "RcppMeCab", "KoNLP" )
 # lapply(pkg_v, require, ch = T)
 # url_v <- "https://github.com/park1200656/KnuSentiLex/archive/refs/heads/master.zip"
-# dest_v <- "data/knusenti.zip"
-# download.file(url = url_v, destfile = dest_v, mode = "wb")
-# unzip("knusenti.zip", exdir=outPath)
+dest_v <- "knusenti.zip"
+download.file(url = url_v, destfile = dest_v, mode = "wb")
+unzip("knusenti.zip")
 
 #| label: 감정분석_사전 데이터 프레임2
 #| echo: true
 #| warning: false
-senti_name_v <- list.files("data/knusenti/KnuSentiLex-master/.")[9]
-senti_dic_df <- read_tsv(str_c("data/knusenti/KnuSentiLex-master/", senti_name_v), col_names = F)
+senti_name_v <- list.files("KnuSentiLex-master/.")[9]
+senti_dic_df <- read_tsv(str_c("KnuSentiLex-master/", senti_name_v), col_names = F)
 senti_dic_df <- senti_dic_df %>% rename(word = X1, sScore = X2)
 knu_dic_df <- senti_dic_df %>% 
   filter(!is.na(sScore))
 
 jejuutd_senti_df <- jejuutd_df %>% 
-  unnest_tokens(word, text) %>% 
+  unnest_tokens(word, 본문) %>% 
   inner_join(knu_dic_df) %>% 
   count(word, sScore, sort = T) %>% 
   filter(str_length(word) > 1) %>% 
   filter(!word %in% c("대상")) %>% 
   mutate(word = reorder(word, n)) %>% 
   slice_head(n = 20)
-musinsa_senti_df %>% 
+jejuutd_senti_df %>% 
   ggplot() + geom_col(aes(n, word, fill = sScore), show.legend = F) +
     labs(title = "제주유나이티드 감정빈도 분석")
 
 ```
 
-### 
+### 전북현대 모터스
+
+```{r}
+jbhd_senti_df <- jbhd_df %>% 
+  unnest_tokens(word, 본문) %>% 
+  inner_join(knu_dic_df) %>% 
+  count(word, sScore, sort = T) %>% 
+  filter(str_length(word) > 1) %>% 
+  filter(!word %in% c("대상")) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  slice_head(n = 20)
+jbhd_senti_df %>% 
+  ggplot() + geom_col(aes(n, word, fill = sScore), show.legend = F) +
+    labs(title = "전북현대 감정빈도 분석")
+```
