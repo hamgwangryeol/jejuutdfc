@@ -1,5 +1,5 @@
 ---
-title: "언론 분석을 통한 제주유나이티드 FC와 전북현대모터스의 평판 비교 분석"
+title: "언론 분석을 통한 제주유나이티드 FC와 전북현대 모터스의 평판 비교 분석"
 format: html
 editor: visual
 ---
@@ -58,7 +58,7 @@ jeju_tk <- jeju_df2 %>%
   count(word, sort = T)
 jeju_tk <- 
 jeju_tk %>% 
-  filter(!word %in% c("sk", "utd","제주", "K리그", "기자", "축구", "하나원큐", "프로축구","경기","승점", "라운드","fc","지난","제주유나이티드","오후","경기에서","제주는","이하","리그","유나이티드","시즌","있다","열린","밝혔다","이날", "부리그","제주월드컵경기장에서","으로","만에")) %>% 
+  filter(!word %in% c("sk", "utd","제주", "K리그", "기자", "축구", "하나원큐", "프로축구","경기","승점", "라운드","fc","지난","제주유나이티드","오후","경기에서","제주는","이하","리그","유나이티드","시즌","있다","열린","밝혔다","이날", "부리그","제주월드컵경기장에서","으로","만에","감독이","있는","오는","경기를","최근")) %>% 
   filter(str_detect(word, "[:alpha:]+")) %>%
   filter(str_length(word) > 1) %>%
   slice_max(n, n = 15) %>% 
@@ -123,7 +123,7 @@ jbhdfc_tk <- jbhdfc_df %>%
 filter(pos == 'nng')
 library(tidylo)
 
-jejufc_tk %>%
+jejufc_tk %>% 
 count(언론사, word) %>%
 bind_log_odds(set = 언론사, feature = word, n = n) %>%
 group_by(언론사) %>%
@@ -150,11 +150,11 @@ unzip("knusenti.zip")
 #| label: 감정분석_사전 데이터 프레임2
 #| echo: true
 #| warning: false
-senti_name_v <- list.files("KnuSentiLex-master/.")[9]
-senti_dic_df <- read_tsv(str_c("KnuSentiLex-master/", senti_name_v), col_names = F)
-senti_dic_df <- senti_dic_df %>% rename(word = X1, sScore = X2)
-knu_dic_df <- senti_dic_df %>% 
-  filter(!is.na(sScore))
+# senti_name_v <- list.files("KnuSentiLex-master/.")[9]
+# senti_dic_df <- read_tsv(str_c("KnuSentiLex-master/", senti_name_v), col_names = F)
+# senti_dic_df <- senti_dic_df %>% rename(word = X1, sScore = X2)
+# knu_dic_df <- senti_dic_df %>% 
+#  filter(!is.na(sScore))
 
 jejuutd_senti_df <- jejuutd_df %>% 
   unnest_tokens(word, 본문) %>% 
@@ -167,7 +167,6 @@ jejuutd_senti_df <- jejuutd_df %>%
 jejuutd_senti_df %>% 
   ggplot() + geom_col(aes(n, word, fill = sScore), show.legend = F) +
     labs(title = "제주유나이티드 감정빈도 분석")
-
 ```
 
 ### 전북현대 모터스
@@ -185,3 +184,9 @@ jbhd_senti_df %>%
   ggplot() + geom_col(aes(n, word, fill = sScore), show.legend = F) +
     labs(title = "전북현대 감정빈도 분석")
 ```
+
+## 결론
+
+제주유나이티드의 경우 부상, 거친 등의 부정어 언급이 많았다. 이는 2022 시즌 팀의 주축인 안현범, 정우재, 윤빛가람 등의 부상의 여파 등으로 보인다. 다만 제주의 경우 "함께"라는 긍정어의 언급이 많았던 점으로 보아 제주유나이티드의 평판에 대해서는 대체적으로 긍정적으로 판단할 수 있어 보인다.
+
+전북현대의 경우 K리그1 6연패를 한 명문구단 답게 긍정어의 비중이 매우 높았다. '없다', '못하다' 등의 부정어도 종종 보이는 것은 김상식 감독의 부임 이후 2021시즌 겨우 우승, 2022시즌 울산에게 밀려 준우승을 기록한 것이 반영된 것으로 보임.
