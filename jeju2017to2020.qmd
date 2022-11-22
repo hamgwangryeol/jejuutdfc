@@ -1,0 +1,363 @@
+---
+title: "제주유나이티드의 2017~2020 시즌 평판분석"
+format: html
+editor: visual
+---
+
+## 개요
+
+제주유나이티드는 2010년 박경훈 감독 부임 이후 상위권 팀으로 도약했다.
+
+2017년 K리그1 준우승을 이끌어내며 상위권 팀의 면모를 보였지만, 2019년 최악의 성적을 보이며 조성환 감독이 물러났지만 결국 K리그1 최하위를 기록하며 2부리그로 강등됐다.
+
+하지만 2020시즌 '승격 청부사' 남기일 감독의 부임으로 1시즌 만에 K리그2 우승을 확정지으며 승격을 확정했다.
+
+따라서 제주유나이티드의 2017년부터 2020년까지의 평판을 분석해보고자 한다.
+
+## 자료분석
+
+자료 유형 : 뉴스 (스포츠 기사)
+
+자료 출처 : 빅카인즈
+
+자료기간 : 각 시즌 별 1월 1일부터 12월 31일까지
+
+## 자료수집
+
+```{r}
+package_list <- c("tidyverse", "tidytext", "readxl", "kableExtra", 
+                  "multilinguer", "RcppMeCab", "KoNLP", "lubridate", 
+                  "tidylo", "stm", "reshape2", "dplyr", "ggplot2", 
+                  "stringr", "rvest", "wordcloud", "tm", "VennDiagram", "gt")
+ 
+#package_list_installed <- package_list %in% installed.packages()[,"Package"]
+ #new_pkg <- package_list[!package_list_installed]
+ #if(length(new_pkg)) install.packages(new_pkg)
+lapply(package_list, require, character.only = TRUE)
+```
+
+```{r}
+jeju2017_df <- readxl::read_excel("jejuutd_2017.xlsx") %>% 
+  select(제목, 본문)
+jeju2018_df <- readxl::read_excel("jejuutd_2018.xlsx") %>% 
+  select(제목, 본문)
+jeju2019_df <- readxl::read_excel("jejuutd_2019.xlsx") %>% 
+  select(제목, 본문)
+jeju2020_df <- readxl::read_excel("jejuutd_2020.xlsx") %>% 
+  select(제목, 본문)
+```
+
+## 총빈도
+
+### 2017시즌
+
+```{r}
+jeju2017_df2 <- jeju2017_df %>% 
+  distinct(제목, .keep_all = T) %>% 
+  mutate(ID = factor(row_number())) %>% 
+  mutate(label = "0") %>%
+  unite(제목, 본문, col = "text", sep = " ") %>% 
+  mutate(text = str_squish(text))
+jeju2017_tk <- jeju2017_df2 %>% 
+  mutate(text = str_remove_all(text, "[^(\\w+|\\s)]")) %>%  
+  unnest_tokens(word, text, drop = F) %>%
+  count(word, sort = T)
+jeju2017_tk <- 
+jeju2017_tk %>% 
+  filter(!word %in% c("sk", "utd","제주", "K리그", "기자", "축구", "keb","하나은행", "프로축구","경기","승점", "라운드","fc","지난","제주유나이티드","오후","경기에서","제주는","이하","리그","유나이티드","시즌","있다","열린","밝혔다","이날", "부리그","제주월드컵경기장에서","으로","만에","감독이","있는","오는","경기를","최근","전북은","감독은","후반")) %>% 
+  filter(str_detect(word, "[:alpha:]+")) %>%
+  filter(str_length(word) > 1) %>%
+  slice_max(n, n = 15) %>% 
+  mutate(word = reorder(word, n))
+jeju2017_tk %>%
+  ggplot(aes(word, n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "제주유나이티드 2017 시즌 총빈도")
+```
+
+### 2018시즌
+
+```{r}
+jeju2018_df2 <- jeju2018_df %>% 
+  distinct(제목, .keep_all = T) %>% 
+  mutate(ID = factor(row_number())) %>% 
+  mutate(label = "0") %>%
+  unite(제목, 본문, col = "text", sep = " ") %>% 
+  mutate(text = str_squish(text))
+jeju2018_tk <- jeju2018_df2 %>% 
+  mutate(text = str_remove_all(text, "[^(\\w+|\\s)]")) %>%  
+  unnest_tokens(word, text, drop = F) %>%
+  count(word, sort = T)
+jeju2018_tk <- 
+jeju2018_tk %>% 
+  filter(!word %in% c("sk", "utd","제주", "K리그", "기자", "축구", "keb","하나은행", "프로축구","경기","승점", "라운드","fc","지난","제주유나이티드","오후","경기에서","제주는","이하","리그","유나이티드","시즌","있다","열린","밝혔다","이날", "부리그","제주월드컵경기장에서","으로","만에","감독이","있는","오는","경기를","최근","전북은","수원은","월드컵","감독은")) %>% 
+  filter(str_detect(word, "[:alpha:]+")) %>%
+  filter(str_length(word) > 1) %>%
+  slice_max(n, n = 15) %>% 
+  mutate(word = reorder(word, n))
+jeju2018_tk %>%
+  ggplot(aes(word, n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "제주유나이티드 2018 시즌 총빈도")
+```
+
+### 2019시즌
+
+```{r}
+jeju2019_df2 <- jeju2019_df %>% 
+  distinct(제목, .keep_all = T) %>% 
+  mutate(ID = factor(row_number())) %>% 
+  mutate(label = "0") %>%
+  unite(제목, 본문, col = "text", sep = " ") %>% 
+  mutate(text = str_squish(text))
+jeju2019_tk <- jeju2019_df2 %>% 
+  mutate(text = str_remove_all(text, "[^(\\w+|\\s)]")) %>%  
+  unnest_tokens(word, text, drop = F) %>%
+  count(word, sort = T)
+jeju2019_tk <- 
+jeju2019_tk %>% 
+  filter(!word %in% c("sk", "utd","제주", "K리그", "기자", "축구", "keb","하나은행", "프로축구","경기","승점", "라운드","fc","지난","제주유나이티드","오후","경기에서","제주는","이하","리그","유나이티드","시즌","있다","열린","밝혔다","이날", "부리그","제주월드컵경기장에서","으로","만에","감독이","있는","오는","경기를","최근","전북은","수원은","월드컵","감독은","하나원큐","유상철","인천은","유나이티드가","승리를","통해","dgb","이번")) %>% 
+  filter(str_detect(word, "[:alpha:]+")) %>%
+  filter(str_length(word) > 1) %>%
+  slice_max(n, n = 15) %>% 
+  mutate(word = reorder(word, n))
+jeju2019_tk %>%
+  ggplot(aes(word, n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "제주유나이티드 2019 시즌 총빈도")
+```
+
+### 2020시즌
+
+```{r}
+jeju2020_df2 <- jeju2020_df %>% 
+  distinct(제목, .keep_all = T) %>% 
+  mutate(ID = factor(row_number())) %>% 
+  mutate(label = "0") %>%
+  unite(제목, 본문, col = "text", sep = " ") %>% 
+  mutate(text = str_squish(text))
+jeju2020_tk <- jeju2020_df2 %>% 
+  mutate(text = str_remove_all(text, "[^(\\w+|\\s)]")) %>%  
+  unnest_tokens(word, text, drop = F) %>%
+  count(word, sort = T)
+jeju2020_tk <- 
+jeju2020_tk %>% 
+  filter(!word %in% c("sk", "utd","제주", "K리그", "기자", "축구", "keb","하나은행", "프로축구","경기","승점", "라운드","fc","지난","제주유나이티드","오후","경기에서","제주는","이하","리그","유나이티드","시즌","있다","열린","밝혔다","이날", "부리그","제주월드컵경기장에서","으로","만에","감독이","있는","오는","경기를","최근","전북은","수원은","월드컵","감독은","하나원큐","위해","에서","이번","출신")) %>% 
+  filter(str_detect(word, "[:alpha:]+")) %>%
+  filter(str_length(word) > 1) %>%
+  slice_max(n, n = 15) %>% 
+  mutate(word = reorder(word, n))
+jeju2020_tk %>%
+  ggplot(aes(word, n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "제주유나이티드 2020 시즌 총빈도")
+```
+
+## 감정분석
+
+```{r}
+#| label: 감정분석_사전 데이터 프레임1
+#| echo: true
+#| warning: false
+#| eval: false
+
+# pkg_v <- c("tidyverse", "tidytext", "epubr", "RcppMeCab", "KoNLP" )
+# lapply(pkg_v, require, ch = T)
+# url_v <- "https://github.com/park1200656/KnuSentiLex/archive/refs/heads/master.zip"
+dest_v <- "knusenti.zip"
+download.file(url = url_v, destfile = dest_v, mode = "wb")
+unzip("knusenti.zip")
+```
+
+```{r}
+#| label: 감정분석_사전 데이터 프레임2
+#| echo: true
+#| warning: false
+
+senti_name_v <- list.files("KnuSentiLex-master/.")[9]
+senti_dic_df <- read_tsv(str_c("KnuSentiLex-master/", senti_name_v), col_names = F)
+senti_dic_df <- senti_dic_df %>% rename(word = X1, sScore = X2)
+knu_dic_df <- senti_dic_df %>% 
+filter(!is.na(sScore))
+```
+
+### 2017시즌
+
+```{r}
+jeju2017_senti_df <- jeju2017_df %>% 
+  unnest_tokens("word", 본문) %>% 
+  inner_join(knu_dic_df) %>% 
+  count(word, sScore, sort = T) %>% 
+  filter(str_length(word) > 1) %>% 
+  filter(!word %in% c("대상")) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  slice_head(n = 20)
+jeju2017_senti_df %>% 
+  ggplot() + geom_col(aes(n, word, fill = sScore), show.legend = F) +
+    labs(title = "제주유나이티드 2017 시즌 감정빈도 분석")
+
+```
+
+### 2018시즌
+
+```{r}
+jeju2018_senti_df <- jeju2018_df %>% 
+  unnest_tokens("word", 본문) %>% 
+  inner_join(knu_dic_df) %>% 
+  count(word, sScore, sort = T) %>% 
+  filter(str_length(word) > 1) %>% 
+  filter(!word %in% c("대상")) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  slice_head(n = 20)
+jeju2018_senti_df %>% 
+  ggplot() + geom_col(aes(n, word, fill = sScore), show.legend = F) +
+    labs(title = "제주유나이티드 2018 시즌 감정빈도 분석")
+```
+
+### 2019시즌
+
+```{r}
+jeju2019_senti_df <- jeju2019_df %>% 
+  unnest_tokens("word", 본문) %>% 
+  inner_join(knu_dic_df) %>% 
+  count(word, sScore, sort = T) %>% 
+  filter(str_length(word) > 1) %>% 
+  filter(!word %in% c("대상")) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  slice_head(n = 20)
+jeju2019_senti_df %>% 
+  ggplot() + geom_col(aes(n, word, fill = sScore), show.legend = F) +
+    labs(title = "제주유나이티드 2019 시즌 감정빈도 분석")
+```
+
+### 2020시즌
+
+```{r}
+jeju2020_senti_df <- jeju2020_df %>% 
+  unnest_tokens("word", 본문) %>% 
+  inner_join(knu_dic_df) %>% 
+  count(word, sScore, sort = T) %>% 
+  filter(str_length(word) > 1) %>% 
+  filter(!word %in% c("대상")) %>% 
+  mutate(word = reorder(word, n)) %>% 
+  slice_head(n = 20)
+jeju2020_senti_df %>% 
+  ggplot() + geom_col(aes(n, word, fill = sScore), show.legend = F) +
+    labs(title = "제주유나이티드 2020 시즌 감정빈도 분석")
+```
+
+## 상대빈도
+
+```{r}
+#| label: 상대빈도_세팅
+#| echo: true
+#| warning: false
+
+weighted_log_odds_df <-
+  bind_rows(jeju2017_tk, jeju2019_tk, .id = "party") %>%   
+  bind_log_odds(set = party,
+                feature = word, 
+                n = n) %>% 
+  arrange(-log_odds_weighted)
+```
+
+```{r}
+#| label: 상대빈도
+#| echo: true
+#| warning: false
+library(gt)
+library(dplyr)
+
+jeju_2017.2019_df <- bind_cols(
+  weighted_log_odds_df %>%   
+  group_by(party = ifelse(party == 1, "jejuutd(2017)", "jejuutd(2019)")) %>% 
+  arrange(party) %>% 
+  select(-party) %>%
+  head(15),
+  
+  weighted_log_odds_df %>%   
+  group_by(party = ifelse(party == 1, "jejuutd(2017)", "jejuutd(2019)")) %>% 
+  arrange(desc(party)) %>% 
+  select(-party) %>%
+  head(15) 
+  ) 
+jeju_2017.2019_df <- jeju_2017.2019_df[-c(1,5)]
+jeju_2017.2019_df %>%
+  gt() %>% tab_header(
+  "상대적으로 많이 사용한 단어"
+  ) %>% tab_spanner(
+    label = "2017 시즌",
+    columns = 1:3
+  ) %>% tab_spanner(
+    label = "2019 시즌",
+    columns = 4:6
+  ) %>% cols_label(
+    word...2 = "명사",
+    n...3 = "빈도",
+    log_odds_weighted...4 = "가중상대빈도",
+    word...6 = "명사",
+    n...7 = "빈도",
+    log_odds_weighted...8 = "가중상대빈도"
+  ) %>% fmt_number(
+    columns = starts_with("log"), 
+    decimals = 2
+  )
+```
+
+```{r}
+weighted_log_odds_df <-
+  bind_rows(jeju2018_tk, jeju2020_tk, .id = "party") %>%   
+  bind_log_odds(set = party,
+                feature = word, 
+                n = n) %>% 
+  arrange(-log_odds_weighted)
+```
+
+```{r}
+jeju_2018.2020_df <- bind_cols(
+  weighted_log_odds_df %>%   
+  group_by(party = ifelse(party == 1, "jejuutd(2018)", "jejuutd(2020)")) %>% 
+  arrange(party) %>% 
+  select(-party) %>%
+  head(15),
+  
+  weighted_log_odds_df %>%   
+  group_by(party = ifelse(party == 1, "jejuutd(2018)", "jejuutd(2020)")) %>% 
+  arrange(desc(party)) %>% 
+  select(-party) %>%
+  head(15) 
+  ) 
+jeju_2018.2020_df <- jeju_2018.2020_df[-c(1,5)]
+jeju_2018.2020_df %>%
+  gt() %>% tab_header(
+  "상대적으로 많이 사용한 단어"
+  ) %>% tab_spanner(
+    label = "2018 시즌",
+    columns = 1:3
+  ) %>% tab_spanner(
+    label = "2020 시즌",
+    columns = 4:6
+  ) %>% cols_label(
+    word...2 = "명사",
+    n...3 = "빈도",
+    log_odds_weighted...4 = "가중상대빈도",
+    word...6 = "명사",
+    n...7 = "빈도",
+    log_odds_weighted...8 = "가중상대빈도"
+  ) %>% fmt_number(
+    columns = starts_with("log"), 
+    decimals = 2
+  )
+```
+
+## 결론
+
+총빈도와 감정분석, 상대빈도를 모두 파악해본 결과, 성적이 좋았던 2017, 2018시즌의 경우 K리그 3위까지 진출이 가능한 아시아챔피언스리그(ACL)에 대한 언급이 많았음을 알수 있다.
+
+반면 성적이 좋지 못했던 2019시즌의 경우 상대팀에 대한 언급이 많고, 감정분석에서는 "패배"와 같은 부정어의 언급이 상대적으로 많았음을 확인할 수 있었다.
+
+따라서, 제주유나이티드와 같은 프로팀의 평판은 '성적'으로 좌우한다고 볼 수 있다.
